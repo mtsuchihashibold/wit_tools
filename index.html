@@ -1,0 +1,402 @@
+<?DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <link href="https://fonts.googleapis.com/css?family=Noto+Sans+JP" rel="stylesheet">
+    <style type="text/css">
+      html {
+	  font-size: 20pt;
+	  font-family: 'Noto Sans JP', cursive;
+      }
+      .main {
+	  width: 1200px;
+      }
+      .timer {
+	  text-align: center;
+      }
+      .algorithms-container {
+	  display: flex;
+      }
+      .order-1, .order-nlogn, .order-n {
+	  width: 400px;
+	  display: box;
+      }
+      .order-caption, .order-counter {
+	  text-align: center;
+      }
+      table {
+	  border-collapse: collapse;
+	  display: inline-box;
+      }
+      td {
+	  width: 30px;
+	  height: 30px;
+	  background-color: lightgray;
+/*	  border: 1px solid gray;*/
+	  text-align: center;
+      }
+      .select {
+	  background-color: yellow;
+      }
+      .target {
+	  background-color: pink;
+      }
+      .done {
+	  background-color: gray;
+      }
+    </style>
+    <script type="module">
+      const FRAME_RATE = 10;
+      const Timer = (function(fr, id) {
+	  let time = 0;
+	  const elm = document.getElementById(id);
+
+	  const init = function() {
+	      time = 0;
+	  }
+	  const print = function() {
+	      const miliseconds = Math.floor(time);
+	      const seconds = Math.floor(miliseconds / 10);
+	      const minutes = Math.floor(seconds / 60);
+	      elm.textContent = `${('00' + (minutes % 60)).slice(-2)}:${('00' + (seconds % 60)).slice(-2)}.${((time % 10) + '0').slice(-2)}`;
+	  }
+	  const clock = function() {
+	      time += 1;
+	      print();
+	  }
+	  const org = {};
+	  org.getInstance = function(){
+	      const ret = {}
+	      ret.init = init;
+	      ret.clock = clock;
+	      return ret;
+	  }
+	  Object.freeze(org);
+	  return org;
+	  
+      })(FRAME_RATE, 'total-timer');
+
+      const randomArrayGenerator = (function() {
+	  let array = null;
+
+	  const gen = function(start, capacity) {
+	      // array = [...Array(capacity).keys()];
+	      // let i = array.length;
+	      // let j = 0;
+	      // let tmp = 0;
+	      // while (i > 1) {
+	      // 	  i = i - 1;
+	      // 	  j = Math.floor(Math.random() * i);
+	      // 	  tmp = array[i];
+	      // 	  array[i] = array[j];
+	      // 	  array[j] = tmp;
+	      // }
+	      array = [];
+	      for ( let i = start ; i < start + capacity ; i++ ) {
+		  array.push(i);
+	      }
+	      return array;
+	  }
+	  
+	  const ret = {};
+	  ret.gen = gen;
+	  Object.freeze(ret);
+	  return ret;
+      })();
+
+
+      class Searcher {
+	  execute(arr, target) {
+	      throw Error('Not implement');
+	  }
+      }
+
+      const LinerSearcher2 = function() {
+	  let arr = null;
+	  let target = -1;
+	  let capacity = -1;
+	  let idx = 0;
+	  let result = -1;
+	  let cnt = 0;
+
+	  const ret = {};
+	  ret.name = "LinerSearcher";
+	  ret.init = function(_arr) {
+	      arr = _arr;
+	      capacity = _arr.length;
+	      // console.log(`[DEBUG] arr: ${arr}`);
+	      // console.log(`[DEBUG] capacity: ${capacity}`);
+	  }
+	  ret.setTarget = function(_target) {
+	      target = _target;
+	      console.log("[DEBUG] LinerSearcher2 started");
+	  }
+	  const select = function(){
+	      document.body.querySelector(`#ls${idx}`).classList.add('select');
+	      return false;
+	  }
+	  const next = function(){
+	      if ( idx >= capacity ) {
+		  console.log(`[DEBUG] overflow: idx=${idx}, capacity=${capacity}`);
+		  return true;
+	      }
+	      if ( Number(arr[idx]) == Number(target) ) {
+		  document.body.querySelector(`#ls${idx}`).classList.add('target');
+		  return true;
+		  
+	      } else {
+		  document.body.querySelector(`#ls${idx}`).classList.add('done');
+		  idx++;
+		  return false
+	      }
+	  }
+	  ret.next = function() {
+	      if ( cnt++ % 2 == 0 ) return select();
+	      else return next();
+	  }
+	  ret.getResult = function() {
+	      return idx;
+	  }
+
+	  Object.freeze(ret);
+	  return ret;
+      }
+      
+      const BinarySearcher2 = function() {
+	  let arr = null;
+	  let target = -1;
+	  let capacity = -1;
+	  let idx = -1;
+	  let left = -1;
+	  let right = -1;
+	  let cnt = 0;
+	  
+	  const ret = {};
+	  ret.name = "BinarySearcher";
+	  ret.init = function(_arr) {
+	      arr = _arr;
+	      capacity = _arr.length;
+	      // console.log(`[DEBUG] arr: ${arr}`);
+	      // console.log(`[DEBUG] capacity: ${capacity}`);
+	  }
+	  ret.setTarget = function(_target) {
+	      target = _target;
+	      console.log("[DEBUG] BinarySearcher2 started");
+	  }
+	  const select = function() {
+	      if ( left < 0 ) {
+		  document.body.querySelector('#bs0').classList.add('select');
+		  return false;
+	      }
+	      if ( right < 0 ) {
+		  document.body.querySelector(`#bs${capacity-1}`).classList.add('select');
+		  return false;
+	      }
+	      let i = (left + right) >> 1;
+	      document.body.querySelector(`#bs${i}`).classList.add('select');
+	      return false;
+	      
+	  }
+	  const next = function(){
+	      if ( left < 0 ) {
+		  if ( Number(arr[0]) == Number(target) ) {
+		      document.body.querySelector('#bs0').classList.add('target');
+		      idx = 0;
+		      return true;
+		  } else {
+		      document.body.querySelector('#bs0').classList.add('done');
+		      left = 0;
+		      return false;
+		  }
+	      }
+	      if ( right < 0 ) {
+		  if ( Number(arr[capacity - 1]) == Number(target) ) {
+		      document.body.querySelector(`#bs${capacity-1}`).classList.add('target');
+		      idx = capacity - 1;
+		      return true;
+		  } else {
+		      document.body.querySelector(`#bs${capacity-1}`).classList.add('done');
+		      right = capacity - 1;
+		      return false;
+		  }
+	      }
+
+	      idx = (left + right) >> 1;
+	      if ( Number(arr[idx]) == Number(target) ) {
+		  document.body.querySelector(`#bs${idx}`).classList.add('target');
+		  return true;
+	      }
+	      if ( Number(arr[idx]) < Number(target) ) {
+		  for ( let i = left ; i <= idx ; i++) {
+		      document.body.querySelector(`#bs${i}`).classList.add('done');
+		  }
+		  left = idx;
+		  return false;
+	      }
+	      if ( Number(arr[idx]) > Number(target) ) {
+		  for ( let i = idx ; i <= right ; i++) {
+		      document.body.querySelector(`#bs${i}`).classList.add('done');
+		  }
+		  right = idx;
+		  return false
+	      }
+	      
+	      if ( idx >= capacity ) {
+		  console.log(`[DEBUG] overflow: idx=${idx}, capacity=${capacity}`);
+		  return true;
+	      }
+	  }
+	  ret.next = function() {
+	      if ( cnt++ % 2 == 0 ) return select();
+	      else return next();
+	  }
+	  ret.getResult = function() {
+	      return idx;
+	  }
+
+	  Object.freeze(ret);
+	  return ret;
+      }
+
+      const HashSearcher2 = function() {
+	  let arr = null;
+	  let target = -1;
+	  let capacity = -1;
+	  let cnt = 0;
+	  const ret = {};
+	  ret.name = "HashSearcher";
+	  ret.init = function(_arr) {
+	      arr = _arr;
+	      capacity = _arr.length;
+	      // console.log(`[DEBUG] arr: ${arr}`);
+	      // console.log(`[DEBUG] capacity: ${capacity}`);
+	  }
+	  ret.setTarget = function(_target) {
+	      target = _target;
+	      console.log("[DEBUG] HashSearcher2 started");
+	  }
+	  const select = function() {
+	      document.body.querySelector(`#hs${target}`).classList.add('select');
+	  }
+	  const next = function(){
+	      document.body.querySelector(`#hs${target}`).classList.add('target');
+	      return Number(arr[target]) == Number(target);
+	  }
+	  ret.next = function() {
+	      if ( cnt++ % 2 == 0 ) return select();
+	      else return next();
+	  }
+	  ret.getResult = function() {
+	      return target;
+	  }
+
+	  Object.freeze(ret);
+	  return ret;
+      }
+      
+      const doSearch = function() {
+	  const pre = document.querySelectorAll('table');
+	  console.log(pre);
+	  if (pre.length != 0) [...pre].map(elm => elm.classList.remove(...elm.classList));
+	  let start = new Date();
+	  console.log(start);
+	  const capa = 100; // Number(document.querySelector('#total').value);
+	  const ans = Number(document.querySelector('#target').value);
+	  const interval = 250;
+	  const arr = randomArrayGenerator.gen(0,capa);
+	  let end = new Date();
+	  console.log((end - start)/1000);
+
+	  const executer = function(a) {
+	      a.init(arr);
+	      a.setTarget(ans);
+	      const start = new Date();
+	      let id = setInterval(() => {
+		  if ( a.next() ) {
+		      clearInterval(id);
+		      console.log(`[DEBUG] ${a.name} result: ${a.getResult()}`);
+		      console.log(((new Date()) - start)/1000);
+		  }
+	      }, interval);
+	  }
+
+
+	  executer(new LinerSearcher2());
+	  executer(new BinarySearcher2());
+	  executer(new HashSearcher2());
+      }
+      
+      window.onload = function() {
+	  // const timer = Timer.getInstance();
+	  // timer.init();
+	  // setInterval(
+	  //     () => {
+	  // 	  timer.clock();
+	  //     }, 100)
+	  document.querySelector('button').addEventListener(
+	      'click', doSearch, false);
+	  const createTbl = function(key, cls) {
+	      const tbl = document.createElement('table');
+	      const tbody = document.createElement('tbody');
+	      tbl.append(tbody);
+	      for ( let row = 0 ; row < 10; row++ ) {
+		  const tr = document.createElement('tr');
+		  tbody.append(tr);
+		  for ( let col = 0 ; col < 10; col++ ) {
+		      const td = document.createElement('td');
+		      td.setAttribute('id', `${key}${row * 10 + col}`);
+		      td.textContent = row * 10 + col;
+		      tr.append(td);
+		  }
+	      }
+	      // document.body.append(tbl);
+	      document.querySelector(cls).append(tbl);
+	  }
+	  createTbl('hs', '.order-1 > .order-display');
+	  createTbl('bs', '.order-nlogn > .order-display');
+	  createTbl('ls', '.order-n > .order-display');
+
+      }
+    </script>
+  </head>
+  <body>
+    <div class="main">
+      <!--<label>総数<input type="text" id="total"></input></label>-->
+      <label>探索値<input type="text" id="target"></input></label>
+      <button>探索する</button>
+      <div class="timer" id="total-timer">00:00.00</div>
+      <div class="algorithms-container">
+	<div class="order-1">
+	  <div class="order-caption">
+	    ハッシュ探索法
+	  </div>
+	  <div class="order-display">
+	  </div>
+	  <div class="timer order-1" id="order-1-timer">
+	    00:00.80
+	  </div>
+	</div>
+	<div class="order-nlogn">
+	  <div class="order-caption">
+	    二分探索法
+	  </div>
+	  <div class="order-display">
+	  </div>
+	  <div class="timer order-n" id="order-n-timer">
+	    00:01.65
+	  </div>
+	</div>
+	<div class="order-n">
+	  <div class="order-caption">
+	    線形探索法
+	  </div>
+	  <div class="order-display">
+	  </div>
+	  <div class="timer order-nn" id="order-nn-timer">
+	    01:42.77
+	  </div>
+	</div>
+      </div>
+    </div>
+  </body>
+</html>
